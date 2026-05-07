@@ -2350,6 +2350,11 @@ class Alex {
   // True if there are no elements
   bool empty() const { return (size() == 0); }
 
+  // Return the depth of the RMI tree (model-node levels + 1 for data nodes).
+  size_t depth() const {
+    return root_node_ ? static_cast<size_t>(superroot_->level_ - root_node_->level_ + 1) : 0;
+  }
+
   // This is just a function required by the STL standard. ALEX can hold more
   // items.
   size_t max_size() const { return size_t(-1); }
