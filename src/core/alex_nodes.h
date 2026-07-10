@@ -355,6 +355,11 @@ class AlexDataNode : public AlexNode<T, P> {
   int num_inserts_ = 0;                      // does not reset after resizing
   int num_resizes_ = 0;  // technically not required, but nice to have
 
+  // Deep profiling: per-component timing (CPU cycles via rdtsc)
+  mutable uint64_t predict_cycles_ = 0;
+  mutable uint64_t search_cycles_ = 0;
+  mutable int num_profiled_lookups_ = 0;
+
   // Variables for determining append-mostly behavior
   T max_key_ = std::numeric_limits<
       T>::lowest();  // max key in node, updates after inserts but not erases
@@ -1460,6 +1465,7 @@ class AlexDataNode : public AlexNode<T, P> {
     // The last key slot with a certain value is guaranteed to be a real key
     // (instead of a gap)
     int pos = exponential_search_upper_bound(predicted_pos, key) - 1;
+
     if (pos < 0 || !key_equal(ALEX_DATA_NODE_KEY_AT(pos), key)) {
       return -1;
     } else {

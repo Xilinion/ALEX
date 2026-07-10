@@ -2351,8 +2351,20 @@ class Alex {
   bool empty() const { return (size() == 0); }
 
   // Return the depth of the RMI tree (model-node levels + 1 for data nodes).
+  // The superroot has level = root->level_ - 1, so the formula
+  // superroot->level_ - root->level_ + 1 is always 0.
+  // We traverse the leaves to find the deepest level instead.
   size_t depth() const {
-    return root_node_ ? static_cast<size_t>(superroot_->level_ - root_node_->level_ + 1) : 0;
+    if (!root_node_) return 0;
+    short max_leaf_level = 0;
+    for (NodeIterator node_it = NodeIterator(this); !node_it.is_end();
+         node_it.next()) {
+      if (node_it.current()->is_leaf_) {
+        max_leaf_level = std::max(max_leaf_level, node_it.current()->level_);
+      }
+    }
+    // Depth = deepest leaf level - superroot level (= deepest leaf level + 1)
+    return static_cast<size_t>(max_leaf_level - superroot_->level_);
   }
 
   // This is just a function required by the STL standard. ALEX can hold more
