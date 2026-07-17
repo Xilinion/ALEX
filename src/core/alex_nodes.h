@@ -11,6 +11,7 @@
 #pragma once
 
 #include "alex_base.h"
+#include <x86intrin.h>
 
 // Whether we store key and payload arrays separately in data nodes
 // By default, we store them separately
@@ -1460,11 +1461,17 @@ class AlexDataNode : public AlexNode<T, P> {
   // If no positions equal to key, returns -1
   int find_key(const T& key) {
     num_lookups_++;
+    uint64_t t0 = __rdtsc();
     int predicted_pos = predict_position(key);
+    uint64_t t1 = __rdtsc();
+    predict_cycles_ += t1 - t0;
 
     // The last key slot with a certain value is guaranteed to be a real key
     // (instead of a gap)
     int pos = exponential_search_upper_bound(predicted_pos, key) - 1;
+
+    search_cycles_ += __rdtsc() - t1;
+    num_profiled_lookups_++;
 
     if (pos < 0 || !key_equal(ALEX_DATA_NODE_KEY_AT(pos), key)) {
       return -1;
